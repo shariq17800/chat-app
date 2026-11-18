@@ -1,0 +1,63 @@
+import { useContext, useEffect, useState } from 'react';
+import './App.css';
+import AuthPage from './pages/AuthPage';
+import ChatPage from './pages/ChatPage';
+import { GlobalContext } from './context/Context';
+import api from './component/api';
+import { Navigate, Route, Routes } from 'react-router';
+import Users from './pages/Users';
+import ChatScreen from './pages/ChatScreen';
+
+function App() {
+    let { state, dispatch } = useContext(GlobalContext);
+    // console.log("state", state)
+    const checkUser = async () => {
+        try {
+            const apiRes = await api.get(`/me`)
+            console.log("apiRes", apiRes.data)
+            dispatch({ type: "USER_LOGIN", user: apiRes.data.user })
+        } catch (error) {
+            dispatch({ type: "USER_LOGOUT" })
+            console.log("Err", error)
+        }
+    }
+
+    // const objKey = "ghi"
+    // const objValue = "value"
+
+
+    // let obj = {
+    //   [objKey]: objValue
+    // }
+    // console.log("obj", obj[objKey])
+
+    useEffect(() => {
+        checkUser()
+    }, [])
+
+    return (
+        <div className="App">
+            {state.isLogin ?
+                <>
+                    <header>{state.user.firstName} {state.user.lastName} ({state.user.email})</header>
+                    <Routes>
+                        <Route path="/" element={<Users />} />
+                        {/* /chat/123456 */}
+                        <Route path="/chat/:userId" element={<ChatScreen />} />
+                        <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                </>
+                :
+                state.isLogin == false ?
+                    <Routes>
+                        <Route path="/login" element={<AuthPage />} />
+                        <Route path="*" element={<Navigate to="/login" />} />
+                    </Routes>
+                    :
+                    <p>Loading...</p>
+            }
+        </div>
+    );
+}
+
+export default App;
